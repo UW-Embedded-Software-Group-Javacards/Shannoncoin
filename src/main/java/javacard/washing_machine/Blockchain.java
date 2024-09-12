@@ -37,8 +37,7 @@ public class Blockchain {
                 // hash it all
                 byte[] raw_hash = digest.digest(raw_data);
                 // cast hash to string (readable)
-                String output_hash = new String(raw_hash, StandardCharsets.UTF_8);
-                return output_hash;
+                return new String(raw_hash, StandardCharsets.UTF_8);
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
             }
