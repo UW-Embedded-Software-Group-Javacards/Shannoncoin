@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 // washing machine system client
 public class WashingMachineApplication {
     public static void main(String[] args) {
-
+        System.out.println("Test");
         SpringApplication.run(WashingMachineApplication.class, args);
     }
 

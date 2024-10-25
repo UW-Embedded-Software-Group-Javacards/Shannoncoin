@@ -8,8 +8,8 @@ import java.security.NoSuchAlgorithmException;
 // defines a blockchain object. this is the object being passed between clients.
 // clients will have the ability to verify the legitimacy of a blockchain
 public class Blockchain {
+    // may need to make seperate block class, so clients can access it for local validations
     private class Block {
-
 
         private long timestamp;
         private String data; // for now string, will need to implement transaction class later
@@ -27,7 +27,7 @@ public class Blockchain {
         public String CalculateHash() {
             try {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                ByteBuffer buffer = ByteBuffer.allocate(64); // 64 byte buffer
+                ByteBuffer buffer = ByteBuffer.allocate(1024); // 1kb buffer (may need to increase)
                 // put in all the info we want to hash
                 buffer.putLong(timestamp);
                 buffer.put(data.getBytes(StandardCharsets.UTF_8));
