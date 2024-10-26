@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.HashMap;
 
 public class Block {
 
@@ -13,11 +14,11 @@ public class Block {
     private String prevHash;
     private long dummy; // dummy value can be modified for mining
     private String hash; // byte array casted to string
-
+    private static HashMap<Character, String> hexMap = new HashMap<>(); // for efficiently checking pow
     // constructors
 
-    // all params, only use for making blocks that already exist on the chain (deserializing)
-    // re-hashes, does NOT generate timestamp
+    // workhorse constructor: only explicitly use for blocks that already exist on the chain (deserializing)
+    // re-hashes, does NOT generate timestamp on its own
     public Block(long timestamp, String data, String prevHash, long dummy) {
         this.timestamp = timestamp;
         this.data = data;
@@ -25,17 +26,12 @@ public class Block {
         this.dummy = dummy;
         this.hash = "";
         this.updateHash();
+        this.fillHexMap();
     }
 
     // generate timestamp at time of creation, set dummy value to 0
     public Block(String data, String prevHash) {
-        this.timestamp = Instant.now().getEpochSecond();
-        this.data = data;
-        this.prevHash = prevHash;
-        this.dummy = 0;
-        // set hash value upon creation
-        this.hash = "";
-        this.updateHash();
+        this(Instant.now().getEpochSecond(), data, prevHash, 0);
     }
 
     // generates timestamp when created
@@ -96,12 +92,90 @@ public class Block {
         this.hash = this.calculateHash();
     }
 
+    private void fillHexMap() {
+        hexMap.put('0', "0000");
+        hexMap.put('1', "0001");
+        hexMap.put('2', "0010");
+        hexMap.put('3', "0011");
+        hexMap.put('4', "0100");
+        hexMap.put('5', "0101");
+        hexMap.put('6', "0110");
+        hexMap.put('7', "0111");
+        hexMap.put('8', "1000");
+        hexMap.put('9', "1001");
+        hexMap.put('A', "1010");
+        hexMap.put('B', "1011");
+        hexMap.put('C', "1100");
+        hexMap.put('D', "1101");
+        hexMap.put('E', "1110");
+        hexMap.put('F', "1111");
+    }
+
     // determines if a block and its data is valid
-    public boolean isBlockValid() {
-        // confirm: this block is what it claims to be
-        return this.hash.equals(this.calculateHash());
+    public boolean isBlockValid(int difficulty) {
+        // confirm: this block is what it claims to be and has proof of work
+        return this.hash.equals(this.calculateHash()) && this.hashHexIsZeroes(difficulty);
 
         // soon: will also check validity of block's transactions
+    }
+
+    // overload for non-difficulty check
+    public boolean isBlockValid() {
+        return isBlockValid(0);
+    }
+
+    // helper function: takes hex string and converts to binary,
+    // returns true if the first (difficulty) binary digits are 0s
+    private boolean hashHexIsZeroes(int difficulty) {
+        char digit;
+        int i = 0;
+        while (difficulty > 0) {
+            digit = this.hash.charAt(i);
+            if (difficulty >= 4) {
+                // current hex digit MUST be a 0
+                if (digit == '0') {
+                    difficulty -= 4;
+                } else {
+                    return false;
+                }
+            } else {
+                // between 1 and 3 chars needed: convert last char to binary using map then count
+                String binary = hexMap.get(digit);
+                int j = 0;
+                while (difficulty > 0) {
+                    if (binary.charAt(j) == '0') {
+                        --difficulty;
+                    } else {
+                        return false;
+                    }
+                    ++j;
+                }
+            }
+            ++i;
+        }
+
+        return true;
+    }
+
+    // rudimentary proof of work system:
+    // takes an unmined block and mines it by adjusting the dummy value
+    // until the first (difficulty) number of bits in the hash are 0s.
+    // difficulty MUST be [0, 256] (hash output is 256 bits).
+    // each difficulty increment doubles the amount of average computation required
+    public void mineBlock(int difficulty) {
+        assert 0 <= difficulty && difficulty <= 256;
+        long start = Instant.now().getEpochSecond();
+        long calculations = 0;
+        while (! hashHexIsZeroes(difficulty)) { // won't mine already mined block
+            ++this.dummy;
+            this.updateHash();
+            ++calculations;
+        }
+        long end = Instant.now().getEpochSecond();
+        System.out.println("Mined Block at Difficulty " + difficulty + ": " + this.hash);
+        System.out.println("Time taken: " + (end - start) + " seconds");
+        System.out.println("Calculations made: " + calculations);
+        System.out.println("Calculations per second: " + (calculations / (Math.max(end - start, 1))));
     }
 
 }

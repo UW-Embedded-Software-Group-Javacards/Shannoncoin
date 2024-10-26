@@ -9,10 +9,12 @@ import java.util.ArrayList;
 public class Blockchain {
     private ArrayList<Block> chain;
     private String name; // currency name
+    private int difficulty;
 
-    public Blockchain(String name) {
+    public Blockchain(String name, int difficulty) {
         this.chain = new ArrayList<Block>();
         this.name = name;
+        this.difficulty = difficulty;
         this.chain.add(this.createGenesisBlock());
     }
 
@@ -36,7 +38,7 @@ public class Blockchain {
     public void addBlock(Block newBlock) {
         if (newBlock == null) {
             throw new RuntimeException("Error adding block to chain: given null");
-        } else if (!newBlock.isBlockValid()) {
+        } else if (!newBlock.isBlockValid(this.difficulty)) {
             throw new RuntimeException("Error adding block to chain: invalid block");
         }
 
@@ -54,7 +56,7 @@ public class Blockchain {
             Block current = this.chain.get(i);
             Block prev = this.chain.get(i - 1);
             // block is null, block is not valid, or block does not point to correct block
-            if (current == null || ! current.isBlockValid() || ! current.getPrevHash().equals(prev.getHash())) {
+            if (current == null || ! current.isBlockValid(this.difficulty) || ! current.getPrevHash().equals(prev.getHash())) {
                 return false;
             }
         }

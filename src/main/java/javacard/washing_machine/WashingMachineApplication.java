@@ -8,7 +8,8 @@ import java.util.ArrayList;
 
 // washing machine system client
 public class WashingMachineApplication {
-    public static void main(String[] args) {
+
+    public static void testChain() {
         System.out.println("Testing Blockchain validity");
         Blockchain myCoin = new Blockchain("MyCoin");
         myCoin.addBlock(new Block("block a"));
@@ -21,9 +22,25 @@ public class WashingMachineApplication {
         System.out.println("chain valid before hashing modified block? " + myCoin.isChainValid());
         target.updateHash();
         System.out.println("chain valid evan after hashing modified block? " + myCoin.isChainValid());
+    }
 
+    public static void testMine() {
+        System.out.println("Testing Block mining");
+        Block myBlock = new Block("Block 1: mining difficulty 1");
+        System.out.println("Block created");
+        myBlock.mineBlock(0);
+        myBlock.mineBlock(1);
+        myBlock.mineBlock(5);
+        myBlock.mineBlock(16);
+        myBlock.mineBlock(20);
+        myBlock.mineBlock(21);
+        myBlock.mineBlock(22);
+        myBlock.mineBlock(23);
+        System.out.println("Done mining all blocks!");
+    }
 
-
+    public static void main(String[] args) {
+        testMine();
         // SpringApplication.run(WashingMachineApplication.class, args);
     }
 
