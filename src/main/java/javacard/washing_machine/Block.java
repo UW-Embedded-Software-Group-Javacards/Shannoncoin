@@ -55,6 +55,10 @@ public class Block {
         return this.minerAddress;
     }
 
+    public ArrayList<Transaction> getTransactions() {
+        return this.transactions;
+    }
+
     public String getHash() {
         return this.hash;
     }

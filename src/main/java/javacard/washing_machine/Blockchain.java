@@ -11,7 +11,7 @@ public class Blockchain {
     private ArrayList<Block> chain;
     private String name; // currency name
     private int difficulty;
-    private ArrayList<Transaction> pendingTransactions;
+    private ArrayList<Transaction> pendingTransactions; // mempool of pending transactions
     private int miningReward;
 
     public Blockchain(String name, int difficulty, int miningReward) {
@@ -40,16 +40,46 @@ public class Blockchain {
         return this.chain.get(this.chain.size() - 1);
     }
 
-    // adds a mined block to the blockchain
-    // caller is responsible for ensuring that it's valid, or it will be ignored
-    public void addBlock(Block newBlock) {
-        if (newBlock == null) {
-            throw new RuntimeException("Error adding block to chain: given null");
-        } else if (!newBlock.isBlockValid(this.difficulty)) {
-            throw new RuntimeException("Error adding block to chain: invalid block");
+    // creates a new block using all pending transactions and mines it
+    // adds it to the chain, then returns the mined block to be broadcast
+    public Block minePendingTransactions(String minerAddress) {
+        // new block pointing to current latest
+        Block newBlock = new Block(this.pendingTransactions, this.getLatestBlock().getHash());
+        newBlock.mine(this.difficulty, minerAddress);
+        this.chain.add(newBlock);
+        this.pendingTransactions.clear();
+        return newBlock;
+    }
+
+    // adds a transaction to the
+    public void addTransaction(Transaction t) {
+        this.pendingTransactions.add(t);
+    }
+
+    // gets the balance of an address by going through the whole chain
+    // checks transactions and mining rewards
+    public int getBalance(String address) {
+        int balance = 0;
+        for (int i = this.chain.size() - 1; i > 0; --i) {
+            Block b = this.chain.get(i);
+            // check mining reward of block
+            if (b.getMinerAddress().equals(address)) {
+                balance += this.miningReward;
+            }
+            // check all transactions: subtract from, add to
+            for (Transaction t : b.getTransactions()) {
+                if (t.getFromAddress().equals(address)) {
+                    balance -= t.getAmount();
+                }
+                if (t.getToAddress().equals(address)) {
+                    balance += t.getAmount();
+                }
+
+            }
         }
 
-        this.chain.add(newBlock);
+
+        return balance;
     }
 
     // checks the validity of the chain by ensuring all blocks are linked correctly
@@ -67,13 +97,5 @@ public class Blockchain {
         return true;
     }
 
-    // creates a new block using all pending transactions and mines it
-    // adds it to the chain, then returns the mined block to be broadcast
-    public Block minePendingTransactions(String minerAddress) {
-        Block newBlock = new Block(this.pendingTransactions, this.getLatestBlock().getHash());
-        newBlock.mine(this.difficulty, minerAddress);
-        this.addBlock(newBlock);
-        return newBlock;
-    }
 }
 
