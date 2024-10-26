@@ -40,6 +40,10 @@ public class Block {
         return this.hash;
     }
 
+    public String getPrevHash() {
+        return this.prevHash;
+    }
+
     public void setPrevHash(String prev) {
         this.prevHash = prev;
     }
@@ -72,6 +76,14 @@ public class Block {
     // update the hash (ex. after changing data)
     public void updateHash() {
         this.hash = this.calculateHash();
+    }
+
+    // determines if a block and its data is valid
+    public boolean isBlockValid() {
+        // confirm: this block is what it claims to be
+        return this.hash.equals(this.calculateHash());
+
+        // soon: will also check validity of block's transactions
     }
 
 }
