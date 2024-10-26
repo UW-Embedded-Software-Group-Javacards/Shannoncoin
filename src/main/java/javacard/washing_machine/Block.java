@@ -4,26 +4,52 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 
 public class Block {
 
     private long timestamp; // unix time
     private String data; // for now string, will need to implement transaction class later
-    private String hash; // byte array casted to string
     private String prevHash;
     private double dummy; // dummy value can be modified for mining
+    private String hash; // byte array casted to string
 
-    public Block(long timestamp, String data, String prevHash, double dummy) {
-        this.timestamp = timestamp;
+    // constructors
+    // generate timestamp at time of creation
+    public Block(String data, String prevHash, double dummy) {
+        this.timestamp = Instant.now().getEpochSecond(); // unix time in seconds. only set once, at creation
         this.data = data;
         this.prevHash = prevHash;
         this.dummy = dummy;
+        // set hash value upon creation
+        this.hash = "";
+        this.updateHash();
     }
 
-    public String CalculateHash() {
+    public Block(String data) {
+        this(data, "", 0);
+    }
+
+    public Block() {
+        this("", "", 0);
+    }
+
+    // some getters and setters
+
+    public String getHash() {
+        return this.hash;
+    }
+
+    public void setPrevHash(String prev) {
+        this.prevHash = prev;
+    }
+
+    // hashes the block using SHA-256
+    // returns a string of hex digits (bytes)
+    public String calculateHash() {
         try {
             MessageDigest hashDigest = MessageDigest.getInstance("SHA-256");
-            ByteBuffer buffer = ByteBuffer.allocate(1024); // 1kb buffer (may need to increase)
+            ByteBuffer buffer = ByteBuffer.allocate(10240); // 10kb buffer (may need to increase)
             // put in all the info we want to hash in buffer and convert to byte array
             buffer.putLong(timestamp);
             buffer.put(data.getBytes(StandardCharsets.UTF_8));
@@ -38,8 +64,14 @@ public class Block {
                 output.append(String.format("%02X", b));
             }
             return output.toString(); // return as string
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) { // java makes you catch
             throw new RuntimeException(e);
         }
     }
+
+    // update the hash (ex. after changing data)
+    public void updateHash() {
+        this.hash = this.calculateHash();
+    }
+
 }

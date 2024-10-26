@@ -13,7 +13,9 @@ public class WashingMachineApplication {
 
         long unixTime = Instant.now().getEpochSecond();
         Block myBlock = new Block(unixTime, "sample", "sample", 0);
-        System.out.println(myBlock.CalculateHash());
+        // print twice to make sure it's consistent
+        System.out.println(myBlock.calculateHash());
+        System.out.println(myBlock.calculateHash());
 
         SpringApplication.run(WashingMachineApplication.class, args);
     }
