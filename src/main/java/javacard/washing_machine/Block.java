@@ -8,30 +8,44 @@ import java.time.Instant;
 
 public class Block {
 
-    private long timestamp; // unix time
+    private long timestamp; // unix time in seconds
     private String data; // for now string, will need to implement transaction class later
     private String prevHash;
-    private double dummy; // dummy value can be modified for mining
+    private long dummy; // dummy value can be modified for mining
     private String hash; // byte array casted to string
 
     // constructors
-    // generate timestamp at time of creation
-    public Block(String data, String prevHash, double dummy) {
-        this.timestamp = Instant.now().getEpochSecond(); // unix time in seconds. only set once, at creation
+
+    // all params, only use for making blocks that already exist on the chain (deserializing)
+    // re-hashes, does NOT generate timestamp
+    public Block(long timestamp, String data, String prevHash, long dummy) {
+        this.timestamp = timestamp;
         this.data = data;
         this.prevHash = prevHash;
         this.dummy = dummy;
+        this.hash = "";
+        this.updateHash();
+    }
+
+    // generate timestamp at time of creation, set dummy value to 0
+    public Block(String data, String prevHash) {
+        this.timestamp = Instant.now().getEpochSecond();
+        this.data = data;
+        this.prevHash = prevHash;
+        this.dummy = 0;
         // set hash value upon creation
         this.hash = "";
         this.updateHash();
     }
 
+    // generates timestamp when created
     public Block(String data) {
-        this(data, "", 0);
+        this(data, "");
     }
 
+    // generates timestamp when created
     public Block() {
-        this("", "", 0);
+        this("", "");
     }
 
     // some getters and setters
@@ -48,6 +62,10 @@ public class Block {
         this.prevHash = prev;
     }
 
+    public void setDummy(long val) {
+        this.dummy = val;
+    }
+
     // hashes the block using SHA-256
     // returns a string of hex digits (bytes)
     public String calculateHash() {
@@ -58,7 +76,7 @@ public class Block {
             buffer.putLong(timestamp);
             buffer.put(data.getBytes(StandardCharsets.UTF_8));
             buffer.put(prevHash.getBytes(StandardCharsets.UTF_8));
-            buffer.putDouble(dummy);
+            buffer.putLong(dummy);
             byte[] raw_data = buffer.array();
             // hash it all
             byte[] raw_hash = hashDigest.digest(raw_data);

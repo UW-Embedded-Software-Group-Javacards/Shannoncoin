@@ -1,5 +1,6 @@
 package javacard.washing_machine;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 
@@ -13,6 +14,14 @@ public class Blockchain {
         this.chain = new ArrayList<Block>();
         this.name = name;
         this.chain.add(this.createGenesisBlock());
+    }
+
+    public ArrayList<Block> getChain() {
+        return this.chain;
+    }
+
+    public String getName() {
+        return this.name;
     }
 
     // creates a genesis block for a blockchain (starting block)

@@ -2,22 +2,29 @@ package javacard.washing_machine;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import java.time.Instant;
+import java.util.ArrayList;
 
 @SpringBootApplication
 
 // washing machine system client
 public class WashingMachineApplication {
     public static void main(String[] args) {
-        System.out.println("Testing Block Hashing");
+        System.out.println("Testing Blockchain validity");
+        Blockchain myCoin = new Blockchain("MyCoin");
+        myCoin.addBlock(new Block("block a"));
+        myCoin.addBlock(new Block("block b"));
+        myCoin.addBlock(new Block("block c"));
+        System.out.println("Initial chain valid? " + myCoin.isChainValid());
+        System.out.println("attempting to tamper with chain:");
+        Block target = myCoin.getChain().get(2);
+        target.setDummy(1000);
+        System.out.println("chain valid before hashing modified block? " + myCoin.isChainValid());
+        target.updateHash();
+        System.out.println("chain valid evan after hashing modified block? " + myCoin.isChainValid());
 
-        long unixTime = Instant.now().getEpochSecond();
-        Block myBlock = new Block(unixTime, "sample", "sample", 0);
-        // print twice to make sure it's consistent
-        System.out.println(myBlock.calculateHash());
-        System.out.println(myBlock.calculateHash());
 
-        SpringApplication.run(WashingMachineApplication.class, args);
+
+        // SpringApplication.run(WashingMachineApplication.class, args);
     }
 
 }
