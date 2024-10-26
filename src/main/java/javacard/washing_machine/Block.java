@@ -6,11 +6,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 public class Block {
+    private static final int BUFFER_SIZE = 10240; // number of bytes to buffer when hashing. here: 10kb
 
     private long timestamp; // unix time in seconds
-    private String data; // for now string, will need to implement transaction class later
+    private ArrayList<Transaction> transactions; // block data represented as list of transactions
     private String prevHash;
     private long nonce; // nonce value can be modified for mining
     private String hash; // byte array casted to string
@@ -19,9 +21,9 @@ public class Block {
 
     // workhorse constructor: only explicitly use for blocks that already exist on the chain (deserializing)
     // re-hashes, does NOT generate timestamp on its own
-    public Block(long timestamp, String data, String prevHash, long nonce) {
+    public Block(long timestamp, ArrayList<Transaction> transactions, String prevHash, long nonce) {
         this.timestamp = timestamp;
-        this.data = data;
+        this.transactions = transactions;
         this.prevHash = prevHash;
         this.nonce = nonce;
         this.hash = "";
@@ -30,18 +32,18 @@ public class Block {
     }
 
     // generate timestamp at time of creation, set nonce value to 0
-    public Block(String data, String prevHash) {
-        this(Instant.now().getEpochSecond(), data, prevHash, 0);
+    public Block(ArrayList<Transaction> transactions, String prevHash) {
+        this(Instant.now().getEpochSecond(), transactions, prevHash, 0);
     }
 
     // generates timestamp when created
-    public Block(String data) {
-        this(data, "");
+    public Block(ArrayList<Transaction> transactions) {
+        this(transactions, "");
     }
 
     // generates timestamp when created
     public Block() {
-        this("", "");
+        this(new ArrayList<>(), "");
     }
 
     // some getters and setters
@@ -67,10 +69,13 @@ public class Block {
     public String calculateHash() {
         try {
             MessageDigest hashDigest = MessageDigest.getInstance("SHA-256");
-            ByteBuffer buffer = ByteBuffer.allocate(10240); // 10kb buffer (may need to increase)
+            ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
             // put in all the info we want to hash in buffer and convert to byte array
             buffer.putLong(timestamp);
-            buffer.put(data.getBytes(StandardCharsets.UTF_8));
+            // put all transactions
+            for (Transaction t : this.transactions) {
+                buffer.put(t.toString().getBytes(StandardCharsets.UTF_8));
+            }
             buffer.put(prevHash.getBytes(StandardCharsets.UTF_8));
             buffer.putLong(nonce);
             byte[] raw_data = buffer.array();
@@ -119,7 +124,7 @@ public class Block {
         // soon: will also check validity of block's transactions
     }
 
-    // overload for non-difficulty check
+    // overload: checks validity while ignoring proof of work
     public boolean isBlockValid() {
         return isBlockValid(0);
     }

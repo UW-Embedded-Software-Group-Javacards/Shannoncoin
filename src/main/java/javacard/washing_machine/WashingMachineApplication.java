@@ -12,9 +12,9 @@ public class WashingMachineApplication {
     public static void testChain() {
         System.out.println("Testing Blockchain validity");
         Blockchain myCoin = new Blockchain("MyCoin", 0);
-        myCoin.addBlock(new Block("block a"));
-        myCoin.addBlock(new Block("block b"));
-        myCoin.addBlock(new Block("block c"));
+        myCoin.addBlock(new Block());
+        myCoin.addBlock(new Block());
+        myCoin.addBlock(new Block());
         System.out.println("Initial chain valid? " + myCoin.isChainValid());
         System.out.println("attempting to tamper with chain:");
         Block target = myCoin.getChain().get(2);
@@ -26,7 +26,7 @@ public class WashingMachineApplication {
 
     public static void testMine() {
         System.out.println("Testing Block mining");
-        Block myBlock = new Block("Block 1: mining difficulty 1");
+        Block myBlock = new Block();
         System.out.println("Block created");
         myBlock.mineBlock(0);
         myBlock.mineBlock(1);

@@ -28,7 +28,7 @@ public class Blockchain {
 
     // creates a genesis block for a blockchain (starting block)
     private Block createGenesisBlock() {
-        return new Block("Genesis Block");
+        return new Block();
     }
 
     public Block getLatestBlock() {
