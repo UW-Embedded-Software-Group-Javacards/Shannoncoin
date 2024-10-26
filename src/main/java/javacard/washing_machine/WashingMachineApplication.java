@@ -11,14 +11,14 @@ public class WashingMachineApplication {
 
     public static void testChain() {
         System.out.println("Testing Blockchain validity");
-        Blockchain myCoin = new Blockchain("MyCoin");
+        Blockchain myCoin = new Blockchain("MyCoin", 0);
         myCoin.addBlock(new Block("block a"));
         myCoin.addBlock(new Block("block b"));
         myCoin.addBlock(new Block("block c"));
         System.out.println("Initial chain valid? " + myCoin.isChainValid());
         System.out.println("attempting to tamper with chain:");
         Block target = myCoin.getChain().get(2);
-        target.setDummy(1000);
+        target.setNonce(1000);
         System.out.println("chain valid before hashing modified block? " + myCoin.isChainValid());
         target.updateHash();
         System.out.println("chain valid evan after hashing modified block? " + myCoin.isChainValid());

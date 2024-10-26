@@ -12,24 +12,24 @@ public class Block {
     private long timestamp; // unix time in seconds
     private String data; // for now string, will need to implement transaction class later
     private String prevHash;
-    private long dummy; // dummy value can be modified for mining
+    private long nonce; // nonce value can be modified for mining
     private String hash; // byte array casted to string
     private static HashMap<Character, String> hexMap = new HashMap<>(); // for efficiently checking pow
     // constructors
 
     // workhorse constructor: only explicitly use for blocks that already exist on the chain (deserializing)
     // re-hashes, does NOT generate timestamp on its own
-    public Block(long timestamp, String data, String prevHash, long dummy) {
+    public Block(long timestamp, String data, String prevHash, long nonce) {
         this.timestamp = timestamp;
         this.data = data;
         this.prevHash = prevHash;
-        this.dummy = dummy;
+        this.nonce = nonce;
         this.hash = "";
         this.updateHash();
         this.fillHexMap();
     }
 
-    // generate timestamp at time of creation, set dummy value to 0
+    // generate timestamp at time of creation, set nonce value to 0
     public Block(String data, String prevHash) {
         this(Instant.now().getEpochSecond(), data, prevHash, 0);
     }
@@ -58,8 +58,8 @@ public class Block {
         this.prevHash = prev;
     }
 
-    public void setDummy(long val) {
-        this.dummy = val;
+    public void setNonce(long val) {
+        this.nonce = val;
     }
 
     // hashes the block using SHA-256
@@ -72,7 +72,7 @@ public class Block {
             buffer.putLong(timestamp);
             buffer.put(data.getBytes(StandardCharsets.UTF_8));
             buffer.put(prevHash.getBytes(StandardCharsets.UTF_8));
-            buffer.putLong(dummy);
+            buffer.putLong(nonce);
             byte[] raw_data = buffer.array();
             // hash it all
             byte[] raw_hash = hashDigest.digest(raw_data);
@@ -158,7 +158,7 @@ public class Block {
     }
 
     // rudimentary proof of work system:
-    // takes an unmined block and mines it by adjusting the dummy value
+    // takes an unmined block and mines it by adjusting the nonce value
     // until the first (difficulty) number of bits in the hash are 0s.
     // difficulty MUST be [0, 256] (hash output is 256 bits).
     // each difficulty increment doubles the amount of average computation required
@@ -167,7 +167,7 @@ public class Block {
         long start = Instant.now().getEpochSecond();
         long calculations = 0;
         while (! hashHexIsZeroes(difficulty)) { // won't mine already mined block
-            ++this.dummy;
+            ++this.nonce;
             this.updateHash();
             ++calculations;
         }
