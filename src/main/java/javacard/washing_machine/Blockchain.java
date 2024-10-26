@@ -7,14 +7,19 @@ import java.util.ArrayList;
 // defines a blockchain object. this is the object being passed between clients.
 // clients will have the ability to verify the legitimacy of a blockchain
 public class Blockchain {
+
     private ArrayList<Block> chain;
     private String name; // currency name
     private int difficulty;
+    private ArrayList<Transaction> pendingTransactions;
+    private int miningReward;
 
-    public Blockchain(String name, int difficulty) {
+    public Blockchain(String name, int difficulty, int miningReward) {
         this.chain = new ArrayList<Block>();
         this.name = name;
         this.difficulty = difficulty;
+        this.pendingTransactions = new ArrayList<>();
+        this.miningReward = miningReward;
         this.chain.add(this.createGenesisBlock());
     }
 
@@ -35,6 +40,8 @@ public class Blockchain {
         return this.chain.get(this.chain.size() - 1);
     }
 
+    // adds a mined block to the blockchain
+    // caller is responsible for ensuring that it's valid, or it will be ignored
     public void addBlock(Block newBlock) {
         if (newBlock == null) {
             throw new RuntimeException("Error adding block to chain: given null");
@@ -42,10 +49,6 @@ public class Blockchain {
             throw new RuntimeException("Error adding block to chain: invalid block");
         }
 
-        // to add new block to chain: set the prev hash
-        newBlock.setPrevHash(getLatestBlock().getHash());
-        // re-hash since we changed value
-        newBlock.updateHash();
         this.chain.add(newBlock);
     }
 
@@ -56,14 +59,21 @@ public class Blockchain {
             Block current = this.chain.get(i);
             Block prev = this.chain.get(i - 1);
             // block is null, block is not valid, or block does not point to correct block
-            if (current == null || ! current.isBlockValid(this.difficulty) || ! current.getPrevHash().equals(prev.getHash())) {
+            if (current == null || ! current.isBlockValid(this.difficulty) ||
+                    ! current.getPrevHash().equals(prev.getHash())) {
                 return false;
             }
         }
         return true;
     }
 
-
-
+    // creates a new block using all pending transactions and mines it
+    // adds it to the chain, then returns the mined block to be broadcast
+    public Block minePendingTransactions(String minerAddress) {
+        Block newBlock = new Block(this.pendingTransactions, this.getLatestBlock().getHash());
+        newBlock.mine(this.difficulty, minerAddress);
+        this.addBlock(newBlock);
+        return newBlock;
+    }
 }
 

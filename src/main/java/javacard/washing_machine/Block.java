@@ -17,23 +17,26 @@ public class Block {
     private long nonce; // nonce value can be modified for mining
     private String hash; // byte array casted to string
     private static HashMap<Character, String> hexMap = new HashMap<>(); // for efficiently checking pow
+    private String minerAddress;
     // constructors
 
     // workhorse constructor: only explicitly use for blocks that already exist on the chain (deserializing)
     // re-hashes, does NOT generate timestamp on its own
-    public Block(long timestamp, ArrayList<Transaction> transactions, String prevHash, long nonce) {
+    public Block(long timestamp, ArrayList<Transaction> transactions, String prevHash, long nonce,
+                 String minerAddress) {
         this.timestamp = timestamp;
         this.transactions = transactions;
         this.prevHash = prevHash;
         this.nonce = nonce;
+        this.minerAddress = minerAddress;
         this.hash = "";
         this.updateHash();
         this.fillHexMap();
     }
 
-    // generate timestamp at time of creation, set nonce value to 0
+    // generate timestamp at time of creation, set nonce value to 0, miner address to null
     public Block(ArrayList<Transaction> transactions, String prevHash) {
-        this(Instant.now().getEpochSecond(), transactions, prevHash, 0);
+        this(Instant.now().getEpochSecond(), transactions, prevHash, 0, null);
     }
 
     // generates timestamp when created
@@ -47,6 +50,10 @@ public class Block {
     }
 
     // some getters and setters
+
+    public String getMinerAddress() {
+        return this.minerAddress;
+    }
 
     public String getHash() {
         return this.hash;
@@ -116,7 +123,7 @@ public class Block {
         hexMap.put('F', "1111");
     }
 
-    // determines if a block and its data is valid
+    // determines if a (mined) block and its data is valid
     public boolean isBlockValid(int difficulty) {
         // confirm: this block is what it claims to be and has proof of work
         return this.hash.equals(this.calculateHash()) && this.hashHexIsZeroes(difficulty);
@@ -167,8 +174,10 @@ public class Block {
     // until the first (difficulty) number of bits in the hash are 0s.
     // difficulty MUST be [0, 256] (hash output is 256 bits).
     // each difficulty increment doubles the amount of average computation required
-    public void mineBlock(int difficulty) {
+    // miner address required to payout mining reward
+    public void mine(int difficulty, String minerAddress) {
         assert 0 <= difficulty && difficulty <= 256;
+        this.minerAddress = minerAddress;
         long start = Instant.now().getEpochSecond();
         long calculations = 0;
         while (! hashHexIsZeroes(difficulty)) { // won't mine already mined block

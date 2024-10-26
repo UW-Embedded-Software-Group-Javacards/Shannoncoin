@@ -11,7 +11,7 @@ public class WashingMachineApplication {
 
     public static void testChain() {
         System.out.println("Testing Blockchain validity");
-        Blockchain myCoin = new Blockchain("MyCoin", 0);
+        Blockchain myCoin = new Blockchain("MyCoin", 0, 1);
         myCoin.addBlock(new Block());
         myCoin.addBlock(new Block());
         myCoin.addBlock(new Block());
@@ -28,14 +28,14 @@ public class WashingMachineApplication {
         System.out.println("Testing Block mining");
         Block myBlock = new Block();
         System.out.println("Block created");
-        myBlock.mineBlock(0);
-        myBlock.mineBlock(1);
-        myBlock.mineBlock(5);
-        myBlock.mineBlock(16);
-        myBlock.mineBlock(20);
-        myBlock.mineBlock(21);
-        myBlock.mineBlock(22);
-        myBlock.mineBlock(23);
+        myBlock.mine(0, null);
+        myBlock.mine(1, null);
+        myBlock.mine(5, null);
+        myBlock.mine(16, null);
+        myBlock.mine(20, null);
+        myBlock.mine(21, null);
+        myBlock.mine(22, null);
+        myBlock.mine(23, null);
         System.out.println("Done mining all blocks!");
     }
 
