@@ -89,6 +89,9 @@ public class Block {
             }
             buffer.put(prevHash.getBytes(StandardCharsets.UTF_8));
             buffer.putLong(nonce);
+            if (minerAddress != null) {
+                buffer.put(minerAddress.getBytes(StandardCharsets.UTF_8));
+            }
             byte[] raw_data = buffer.array();
             // hash it all
             byte[] raw_hash = hashDigest.digest(raw_data);

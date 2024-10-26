@@ -47,13 +47,18 @@ public class Blockchain {
         Block newBlock = new Block(this.pendingTransactions, this.getLatestBlock().getHash());
         newBlock.mine(this.difficulty, minerAddress);
         this.chain.add(newBlock);
-        this.pendingTransactions.clear();
+        System.out.println("Congratulations " + minerAddress +
+                ", you mined a block! (transactions: " + newBlock.getTransactions().size() + ")");
+        // important: reallocate mempool since the old one now belongs to the block we just mined
+        this.pendingTransactions = new ArrayList<>();
         return newBlock;
     }
 
-    // adds a transaction to the
+    // adds a transaction to the mempool
     public void addTransaction(Transaction t) {
         this.pendingTransactions.add(t);
+        System.out.println("Added pending transaction:\nSender: " + t.getFromAddress() +
+                "\nRecipient: " + t.getToAddress() + "\nAmount: " + t.getAmount());
     }
 
     // gets the balance of an address by going through the whole chain
@@ -89,8 +94,14 @@ public class Blockchain {
             Block current = this.chain.get(i);
             Block prev = this.chain.get(i - 1);
             // block is null, block is not valid, or block does not point to correct block
-            if (current == null || ! current.isBlockValid(this.difficulty) ||
-                    ! current.getPrevHash().equals(prev.getHash())) {
+            if (current == null) {
+                System.out.println("INVALID CHAIN: NULL BLOCK");
+                return false;
+            } else if (! current.isBlockValid(this.difficulty)) {
+                System.out.println("INVALID CHAIN: BLOCK WITH INVALID PROOF OF WORK OR INACCURATE HASH VALUE");
+                return false;
+            } else if (! current.getPrevHash().equals(prev.getHash())) {
+                System.out.println("INVALID CHAIN: BLOCK WITH INVALID PREVIOUS POINTER");
                 return false;
             }
         }
