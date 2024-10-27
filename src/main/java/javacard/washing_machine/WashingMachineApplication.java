@@ -54,9 +54,20 @@ public class WashingMachineApplication {
         System.out.println("Blockchain valid? " + coin.isChainValid());
     }
 
+    public static void testClient() {
+        Client myClient = new Client();
+        Blockchain coin = new Blockchain("coin1", 22, 1);
+        myClient.cpuMinePendingTransactions(coin, 4, null);
+        myClient.cpuMinePendingTransactions(coin, 8, null);
+        myClient.cpuMinePendingTransactions(coin, 12, null);
+        Blockchain coin2 = new Blockchain("coin2", 24, 1);
+        myClient.cpuMinePendingTransactions(coin2, 8, null);
+    }
+
     public static void main(String[] args) {
+        testClient();
         // testMine();
-        testMineRewards();
+        // testMineRewards();
         // SpringApplication.run(WashingMachineApplication.class, args);
     }
 

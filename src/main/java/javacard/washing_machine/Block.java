@@ -4,12 +4,18 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Block {
-    private static final int BUFFER_SIZE = 10240; // number of bytes to buffer when hashing. here: 10kb
+    // number of bytes to buffer when hashing. here: 10kb
+    // ex. bitcoin is 1mb
+    private static final int BUFFER_SIZE = 10240;
 
     private long timestamp; // unix time in seconds
     private ArrayList<Transaction> transactions; // block data represented as list of transactions
@@ -135,7 +141,7 @@ public class Block {
         // confirm: this block is what it claims to be and has proof of work
         return this.hash.equals(this.calculateHash()) && this.hashHexIsZeroes(difficulty);
 
-        // soon: will also check validity of block's transactions
+        // soon: will also check validity of block's transactions (valid signature and hash)
     }
 
     // overload: checks validity while ignoring proof of work
@@ -182,6 +188,7 @@ public class Block {
     // difficulty MUST be [0, 256] (hash output is 256 bits).
     // each difficulty increment doubles the amount of average computation required
     // miner address required to payout mining reward
+    // single thread mining
     public void mine(int difficulty, String minerAddress) {
         assert 0 <= difficulty && difficulty <= 256;
         this.minerAddress = minerAddress;
@@ -197,6 +204,28 @@ public class Block {
         System.out.println("Time taken: " + (end - start) + " seconds");
         System.out.println("Calculations made: " + calculations);
         System.out.println("Calculations per second: " + (calculations / (Math.max(end - start, 1))));
+    }
+
+    public void mine(int difficulty, String minerAddress, AtomicBoolean keepMining, AtomicInteger calculations) {
+        assert 0 <= difficulty && difficulty <= 256;
+        this.minerAddress = minerAddress;
+        long start = Instant.now().toEpochMilli();
+        while (! hashHexIsZeroes(difficulty)) { // won't mine already mined block
+            ++this.nonce;
+            this.updateHash();
+            calculations.incrementAndGet();
+            if (!keepMining.get()) {
+                // short circuit when flag is triggered
+                return;
+            }
+        }
+        long end = Instant.now().toEpochMilli();
+        long total_calculations = calculations.get();
+        NumberFormat formatter = new DecimalFormat("#0.000");
+        System.out.println("Mined Block at Difficulty " + difficulty + ": " + this.hash);
+        System.out.println("Time taken: " + formatter.format(((double)(end - start)) / 1000) + " seconds");
+        System.out.println("Calculations made: " + total_calculations);
+        System.out.println("Calculations per second: " + ((total_calculations * 1000) / (Math.max(end - start, 1))));
     }
 
 }

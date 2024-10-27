@@ -27,8 +27,16 @@ public class Blockchain {
         return this.chain;
     }
 
+    public ArrayList<Transaction> getPendingTransactions() {
+        return this.pendingTransactions;
+    }
+
     public String getName() {
         return this.name;
+    }
+
+    public int getDifficulty() {
+        return this.difficulty;
     }
 
     // creates a genesis block for a blockchain (starting block)
@@ -40,17 +48,27 @@ public class Blockchain {
         return this.chain.get(this.chain.size() - 1);
     }
 
+    // adds a block to chain and clears pending transactions
+    public void addBlockAndClear(Block b) {
+        if (b.isBlockValid(this.difficulty)) {
+            this.chain.add(b);
+            this.pendingTransactions.clear();
+        }
+    }
+
     // creates a new block using all pending transactions and mines it
     // adds it to the chain, then returns the mined block to be broadcast
+    // will soon replace this with CPU and GPU mining (choose number of threads)
     public Block minePendingTransactions(String minerAddress) {
         // new block pointing to current latest
-        Block newBlock = new Block(this.pendingTransactions, this.getLatestBlock().getHash());
+        // shallow copy transactions
+        Block newBlock = new Block(new ArrayList<Transaction>(this.pendingTransactions), this.getLatestBlock().getHash());
         newBlock.mine(this.difficulty, minerAddress);
         this.chain.add(newBlock);
         System.out.println("Congratulations " + minerAddress +
                 ", you mined a block! (transactions: " + newBlock.getTransactions().size() + ")");
-        // important: reallocate mempool since the old one now belongs to the block we just mined
-        this.pendingTransactions = new ArrayList<>();
+        // clear everything that was mined
+        this.pendingTransactions.clear();
         return newBlock;
     }
 
