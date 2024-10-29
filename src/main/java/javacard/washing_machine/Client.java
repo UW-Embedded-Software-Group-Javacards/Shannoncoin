@@ -7,50 +7,51 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // client which uses threading to mine blocks and interact with network
 public class Client {
+    static AtomicBoolean keepMining = new AtomicBoolean(false);
 
-    public void cpuMinePendingTransactions(Blockchain blockchain, int threads, String minerAddress) {
+    public static void stopMining() {
+        keepMining.set(false);
+    }
+
+    // mines blocks on cpu threads. does NOT pause main thread, call stopMining()
+    public static void cpuMinePendingTransactions(Blockchain blockchain, int threads, String minerAddress, boolean await) {
         System.out.println("[MINING WITH " + threads + " CPU THREADS]");
         // object that manages threads
         ExecutorService executor = Executors.newFixedThreadPool(threads);
         // object that we await in main thread. when any thread mines a block, we will
-        // countdown the latch and then shutdown all other threads
+        // countdown the latch which will pause the main thread
         CountDownLatch latch = new CountDownLatch(1);
         // thread-safe integer
         AtomicInteger calculations = new AtomicInteger(0);
-        AtomicBoolean keepMining = new AtomicBoolean(true);
+        keepMining.set(true);
         // currently are references: need to copy for each thread
         final String prevHash = blockchain.getLatestBlock().getHash();
         final ArrayList<Transaction> pending = new ArrayList<>(blockchain.getPendingTransactions());
 
         for (int i = 0; i < threads; ++i) {
             final long offset_index = i;
+            final long offset = (long) 1e12;
             executor.submit(() -> {
-                System.out.println("OPENED MINING THREAD");
                 // actual mining task. SHALLOW COPY ARGS, so each block is distinct
-                // offset nonce value for each thread (offset by 1 billion)
+                // offset nonce value for each thread (offset by 1 trillion)
                 Block newBlock = new Block(new ArrayList<Transaction>(pending), prevHash);
-                newBlock.setNonce(offset_index * 1000000000);
+                newBlock.setNonce(offset_index * offset);
                 newBlock.mine(blockchain.getDifficulty(), minerAddress, keepMining,  calculations);
-                // done mining: count down latch which will close all other threads, then add block
+                // done mining: count down latch, then add block
                 if (keepMining.get()) {
-                    latch.countDown();
                     blockchain.addBlockAndClear(newBlock);
-                    // set flag
-                    System.out.println("SETTING FLAG");
-                    keepMining.set(false);
+                    System.out.println("[TERMINATING MINE]");
+                    stopMining();
+                    latch.countDown();
                 }
-
             });
         }
-
-        // back in main thread: await latch close, then immediately shutdown all threads
-        // gotta fix this but its chill
-        try {
+        if (await) {
+            try {
             latch.await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // restore interrupt status
-        } finally {
-            executor.shutdown();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

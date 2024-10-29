@@ -55,13 +55,13 @@ public class WashingMachineApplication {
     }
 
     public static void testClient() {
-        Client myClient = new Client();
         Blockchain coin = new Blockchain("coin1", 22, 1);
-        myClient.cpuMinePendingTransactions(coin, 4, null);
-        myClient.cpuMinePendingTransactions(coin, 8, null);
-        myClient.cpuMinePendingTransactions(coin, 12, null);
+        // macbook has 10 threads. adding more doesn't seem to improve performance (makes sense!)
+        Client.cpuMinePendingTransactions(coin, 4, null, true);
+        Client.cpuMinePendingTransactions(coin, 8, null, true);
+        Client.cpuMinePendingTransactions(coin, 10, null, true);
         Blockchain coin2 = new Blockchain("coin2", 24, 1);
-        myClient.cpuMinePendingTransactions(coin2, 8, null);
+        Client.cpuMinePendingTransactions(coin2, 8, null, true);
     }
 
     public static void main(String[] args) {
