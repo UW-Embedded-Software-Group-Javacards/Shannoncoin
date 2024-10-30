@@ -38,17 +38,16 @@ public class Client {
                 newBlock.setNonce(offset_index * offset);
                 newBlock.mine(blockchain.getDifficulty(), minerAddress, keepMining,  calculations);
                 // done mining: count down latch, then add block
-                if (keepMining.get()) {
+                if (keepMining.getAndSet(false)) {
                     blockchain.addBlockAndClear(newBlock);
                     System.out.println("[TERMINATING MINE]");
-                    stopMining();
                     latch.countDown();
                 }
             });
         }
         if (await) {
             try {
-            latch.await();
+                latch.await();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
