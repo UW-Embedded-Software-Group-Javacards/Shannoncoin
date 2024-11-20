@@ -1,8 +1,8 @@
 # Shannoncoin
 
-Shannoncoin is a JavaCard-backed cryptocurrency created as part of ongoing research at the ESG Lab.
+Shannoncoin is a JavaCard-backed cryptocurrency created as part of ongoing research at the [ESG Lab](https://uwaterloo.ca/electrical-computer-engineering/profile/sfischme).
 
-This project integrates blockchain and JavaCard technology to create a secure, efficient digital signature solution. It uses blockchain for immutable records and JavaCards for secure cryptographic operations.
+This project integrates blockchain and JavaCard technology to create a secure, efficient digital signature solution.
 
 ## Features
 
