@@ -4,11 +4,10 @@ import javacard.framework.*;
 import javacard.security.*;
 
 public class ShannonCard extends Applet {
-    private static final dataLength = 32;
-    private static final keyLength = 256;
+    private static final short dataLength = 32;
+    private static final short keyLength = 256;
     private KeyPair keypair;
     private Signature signer;
-    private byte[] signatureBuffer;
     // runs once
     public static void install(byte[] bArray, short bOffset, byte bLength) {
         new ShannonCard();
@@ -17,10 +16,9 @@ public class ShannonCard extends Applet {
     protected ShannonCard() {
         // register the applet instance
         // persistent keypair
-        this.keypair = generateKeyPair(this.keyLength * 8);
+        this.keypair = generateKeyPair((short) (this.keyLength * 8));
         this.signer = Signature.getInstance(Signature.ALG_RSA_SHA_256_PKCS1, false);
-        this.signer.init(priv, Signature.MODE_SIGN);
-        this.signatureBuffer = new byte[this.keyLength]; // public key is 256 bytes
+        this.signer.init(this.keypair.getPrivate(), Signature.MODE_SIGN);
         register();
     }
 
@@ -39,20 +37,23 @@ public class ShannonCard extends Applet {
      */
     public void process(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
-        byte cla = apdu.getCLA();  // class byte to identify type of command
-        byte ins = apdu.getINS();  // instruction byte to identify command
-
+        // should be protocol constants
+        byte cla = buffer[ISO7816.OFFSET_CLA];
+        byte ins = buffer[ISO7816.OFFSET_INS];
 
         // divert from 2 specified commands to respond public key and sign data
         if (cla == (byte) 0x00) {  // Only handle commands with CLA 0x00
             if (ins == (byte) 0x01) {
-                // respond with the public key
-                respondPublicKey(pub);
+                // respond with the public key exponent
+                respondPublicModulus(apdu);
             } else if (ins == (byte) 0x02) {
+                // respond with public key modulus
+                respondPublicModulus(apdu);
+            } else if (ins == (byte) 0x03) {
                 // sign data with private key
                 //byte[] dataToSign = new byte[dataLength];  // Create a byte array for the data
                 //System.arraycopy(buffer, 0, dataToSign, 0, 32);
-                signData(buffer);
+                signData(apdu);
             } else {
                 // error for unsupported instruction
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -63,31 +64,34 @@ public class ShannonCard extends Applet {
         }
     }
 
-    public void respondPublicKey() {
-        PublicKey pub = this.keypair.getPublic();
-        // get the public key as a byte array
-        byte[] pubKeyBytes = pub.getEncoded();  
-        short pubKeyLength = (short) pubKeyBytes.length; 
-        
+    public void respondPublicExponent(APDU apdu) {
+        RSAPublicKey pub = (RSAPublicKey) this.keypair.getPublic();
+        byte[] buffer = apdu.getBuffer();
+        pub.getExponent(buffer, (short) 0);
+
         // setup apdu response
-        APDU.setOutgoing();
-        APDU.setOutgoingLength(pubKeyLength);
-        APDU.sendBytes((short) 0, pubKeyBytes, (short) 0, pubKeyLength);
+        apdu.setOutgoingAndSend((short) 0, this.keyLength);
+    }
+
+    public void respondPublicModulus(APDU apdu) {
+        RSAPublicKey pub = (RSAPublicKey) this.keypair.getPublic();
+        byte[] buffer = apdu.getBuffer();
+        pub.getModulus(buffer, (short) 0);
+
+        // setup apdu response
+        apdu.setOutgoingAndSend((short) 0, this.keyLength);
     }
 
     /*
      * Sign data with private key for validation
      */
-    public void signData(byte[] data) {
+    public void signData(APDU apdu) {
         // NOTE: data is 32 bytes
-        PrivateKey priv = this.keypair.getPrivate();
-        byte[] signatureBuffer = new byte[256];
-        short signatureLength = signer.sign(data, 0, this.dataLength, this.signatureBuffer, 0);
+        byte[] buffer = apdu.getBuffer();
+        short signatureLength = (short) (signer.sign(buffer, (short) 0, this.dataLength, buffer, (short) 0));
 
         // setup apdu response
-        APDU.setOutgoing();
-        APDU.setOutgoingLength(signatureLength); 
-        APDU.sendBytes((short) 0, signature, (short) 0, signatureLength);
+        apdu.setOutgoingAndSend((short) 0, signatureLength);
     }
 
 }

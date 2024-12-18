@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>javacard</groupId>
   <artifactId>applet-client</artifactId>
   <version>1.0-SNAPSHOT</version>
-
   <name>applet-client</name>
-  <!-- FIXME change it to the project's website -->
   <url>http://www.example.com</url>
 
   <properties>
@@ -34,13 +32,20 @@
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- Optionally: parameterized tests support -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>oracle.javacard</groupId>
+      <artifactId>api_classic</artifactId>
+      <version>3.2.0</version>
+      <scope>system</scope>
+      <systemPath>C:/Users/user1/Downloads/javacard-sdk/lib/api_classic-3.2.0.jar</systemPath>
+    </dependency>
   </dependencies>
+
 
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
@@ -83,6 +88,41 @@
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.6.1</version>
+        </plugin>
+
+        <!-- Compiler plugin -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.1</version>
+          <configuration>
+            <source>1.2</source>
+            <target>1.2</target>
+          </configuration>
+        </plugin>
+
+        <!-- Java Card converter -->
+        <plugin>
+          <groupId>com.oracle.javacard</groupId>
+          <artifactId>converter</artifactId>
+          <version>3.0.4</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>convert</goal>
+              </goals>
+              <configuration>
+                <classDir>${project.build.outputDirectory}</classDir>
+                <outputDir>${project.build.directory}/cap</outputDir>
+                <applet>
+                  <aid>A0:00:00:00:62:03:01:0C:01</aid>
+                  <class>javacard.ShannonCard</class>
+                </applet>
+                <jckit>${env.JC_HOME}</jckit>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
